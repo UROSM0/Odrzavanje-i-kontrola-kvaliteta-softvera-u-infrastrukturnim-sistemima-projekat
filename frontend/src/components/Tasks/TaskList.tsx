@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Task, Project, TaskFilters as ITaskFilters } from '../../types';
+import { Task, Project, ProjectMember, TaskFilters as ITaskFilters } from '../../types';
 import { taskAPI, projectAPI } from '../../api/api';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
 import TaskFiltersBar from './TaskFilters';
+import ProjectTeam from '../Projects/ProjectTeam';
+import { useAuth } from '../../context/AuthContext';
 
 const TaskList: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filters, setFilters] = useState<ITaskFilters>({});
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [activityVersion, setActivityVersion] = useState(0);
 
   const fetchProject = useCallback(async () => {
     try {
@@ -43,6 +48,9 @@ const TaskList: React.FC = () => {
     fetchProject();
   }, [fetchProject]);
   useEffect(() => {
+    projectAPI.getMembers(Number(projectId)).then((res) => setMembers(res.data)).catch(() => setMembers([]));
+  }, [projectId]);
+  useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
 
@@ -50,17 +58,20 @@ const TaskList: React.FC = () => {
     setTasks((prev) => [task, ...prev]);
     setShowForm(false);
     fetchProject();
+    setActivityVersion((version) => version + 1);
   };
 
   const handleTaskUpdated = (updated: Task) => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     setEditingTask(null);
     fetchProject();
+    setActivityVersion((version) => version + 1);
   };
 
   const handleTaskDeleted = (id: number) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     fetchProject();
+    setActivityVersion((version) => version + 1);
   };
 
   if (!project) return null;
@@ -95,10 +106,20 @@ const TaskList: React.FC = () => {
         </div>
       </div>
 
+      <ProjectTeam
+        projectId={Number(projectId)}
+        ownerId={project.user_id}
+        currentUserId={user?.id || 0}
+        members={members}
+        onMembersChange={setMembers}
+        activityVersion={activityVersion}
+      />
+
       {(showForm || editingTask) && (
         <div className="form-card">
           <TaskForm
             projectId={Number(projectId)}
+            members={members}
             task={editingTask || undefined}
             onSubmit={editingTask ? handleTaskUpdated : handleTaskCreated}
             onCancel={() => {

@@ -910,3 +910,148 @@ a:hover {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.collaboration-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.collaboration-card {
+  min-width: 0;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.collaboration-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+.collaboration-heading h3 {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.collaboration-heading p,
+.invite-form small,
+.empty-activity {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+.team-count,
+.member-role {
+  color: var(--text-secondary);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.team-member-list,
+.activity-list {
+  list-style: none;
+}
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border);
+}
+.member-avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  border-radius: 50%;
+  color: var(--primary);
+  background: var(--primary-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.member-details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+}
+.member-details strong {
+  font-size: 0.82rem;
+}
+.member-details small {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+}
+.invite-form {
+  margin-top: 0.8rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.invite-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.invite-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.invite-controls input {
+  min-width: 0;
+  flex: 1;
+}
+.invite-controls .btn {
+  white-space: nowrap;
+}
+.team-error {
+  margin-bottom: 0.6rem;
+}
+.activity-card {
+  max-height: 25rem;
+  overflow-y: auto;
+}
+.activity-list li {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--border);
+}
+.activity-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 0.5rem;
+  margin-top: 0.38rem;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.activity-list p {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.activity-list time {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+.task-person {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+.task-person strong {
+  color: var(--text);
+}
+
+@media (max-width: 850px) {
+  .collaboration-grid {
+    grid-template-columns: 1fr;
+  }
+}

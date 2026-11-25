@@ -7,6 +7,11 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/:projectId/members', projectController.getMembers);
+router.post('/:projectId/members', projectController.addMember);
+router.delete('/:projectId/members/:memberId', projectController.removeMember);
+router.get('/:projectId/activity', projectController.getActivity);
+
 router.get('/', projectController.getAll);
 router.post('/', projectController.create);
 router.get('/:id', projectController.getOne);

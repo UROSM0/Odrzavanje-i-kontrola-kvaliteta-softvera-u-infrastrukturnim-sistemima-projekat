@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Project } from '../../types';
 import { projectAPI } from '../../api/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface Props {
   project: Project;
@@ -10,6 +11,8 @@ interface Props {
 
 const ProjectCard: React.FC<Props> = ({ project, onDelete }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isOwner = user?.id === project.user_id;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -25,9 +28,9 @@ const ProjectCard: React.FC<Props> = ({ project, onDelete }) => {
     <div className="project-card" onClick={() => navigate(`/projects/${project.id}`)}>
       <div className="project-card-header">
         <h3>{project.name}</h3>
-        <button onClick={handleDelete} className="btn-icon btn-danger-icon" title="Delete project">
+        {isOwner && <button onClick={handleDelete} className="btn-icon btn-danger-icon" title="Delete project">
           ✕
-        </button>
+        </button>}
       </div>
 
       {project.description && <p className="project-card-desc">{project.description}</p>}

@@ -62,6 +62,15 @@ export const taskController = {
 
       const { title, description, priority, status, due_date } = req.body;
       if (!title) { res.status(400).json({ error: 'Task title is required.' }); return; }
+      const assigneeId = req.body.assigned_to_user_id ? Number(req.body.assigned_to_user_id) : null;
+      if (assigneeId !== null && !Number.isInteger(assigneeId)) {
+        res.status(400).json({ error: 'Invalid assignee.' });
+        return;
+      }
+      if (assigneeId && !(await ProjectModel.canAccess(projectId, assigneeId))) {
+        res.status(400).json({ error: 'Assignee must be a member of this project.' });
+        return;
+      }
 
       const task = await TaskModel.create({
         title,
@@ -71,7 +80,9 @@ export const taskController = {
         due_date: due_date || null,
         project_id: projectId,
         user_id: req.userId!,
+        assigned_to_user_id: assigneeId,
       });
+      await ProjectModel.logActivity(projectId, req.userId!, 'task_created', { task_id: task.id, task_title: task.title });
       res.status(201).json(task);
     } catch (err) {
       console.error(err);
@@ -81,8 +92,38 @@ export const taskController = {
 
   async update(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const task = await TaskModel.update(Number(req.params.id), req.userId!, req.body);
+      const taskId = Number(req.params.id);
+      const previous = await TaskModel.findById(taskId, req.userId!);
+      if (!previous) { res.status(404).json({ error: 'Task not found.' }); return; }
+      if (Object.prototype.hasOwnProperty.call(req.body, 'assigned_to_user_id')) {
+        const assigneeId = req.body.assigned_to_user_id ? Number(req.body.assigned_to_user_id) : null;
+        if (assigneeId !== null && !Number.isInteger(assigneeId)) {
+          res.status(400).json({ error: 'Invalid assignee.' });
+          return;
+        }
+        if (assigneeId && !(await ProjectModel.canAccess(previous.project_id, assigneeId))) {
+          res.status(400).json({ error: 'Assignee must be a member of this project.' });
+          return;
+        }
+        req.body.assigned_to_user_id = assigneeId;
+      }
+      const task = await TaskModel.update(taskId, req.userId!, req.body);
       if (!task) { res.status(404).json({ error: 'Task not found.' }); return; }
+      const changes: Record<string, unknown> = { task_id: task.id, task_title: task.title };
+      if (previous.status !== task.status) changes.status = { from: previous.status, to: task.status };
+      if (previous.assigned_to_user_id !== task.assigned_to_user_id) {
+        changes.assigned_to_user_id = task.assigned_to_user_id;
+        changes.assigned_to_name = task.assigned_to_name || null;
+      }
+      if (previous.title !== task.title) changes.title = { from: previous.title, to: task.title };
+      if (previous.priority !== task.priority) changes.priority = { from: previous.priority, to: task.priority };
+      const previousDue = previous.due_date ? new Date(previous.due_date).getTime() : null;
+      const nextDue = task.due_date ? new Date(task.due_date).getTime() : null;
+      if (previousDue !== nextDue) changes.due_date = { from: previous.due_date, to: task.due_date };
+      if (previous.description !== task.description) changes.description_changed = true;
+      if (Object.keys(changes).length > 2) {
+        await ProjectModel.logActivity(task.project_id, req.userId!, 'task_updated', changes);
+      }
       res.json(task);
     } catch (err) {
       console.error(err);
@@ -92,11 +133,14 @@ export const taskController = {
 
   async delete(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const ok = await TaskModel.delete(Number(req.params.id), req.userId!);
+      const taskId = Number(req.params.id);
+      const task = await TaskModel.findById(taskId, req.userId!);
+      const ok = task ? await TaskModel.delete(taskId, req.userId!) : false;
       if (!ok) {
         res.status(404).json({ error: 'Task not found.' });
         return;
       }
+      await ProjectModel.logActivity(task!.project_id, req.userId!, 'task_deleted', { task_title: task!.title });
       res.json({ message: 'Task deleted successfully.' });
     } catch (err) {
       console.error(err);

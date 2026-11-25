@@ -41,6 +41,26 @@ async function ensureSchema(): Promise<void> {
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`);
 
+    await client.query(`ALTER TABLE tasks
+      ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS project_members (
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member')),
+      joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      PRIMARY KEY (project_id, user_id)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS project_activity (
+      id SERIAL PRIMARY KEY,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      event_type TEXT NOT NULL,
+      details JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`);
+
     await client.query(`CREATE TABLE IF NOT EXISTS password_resets (
       id SERIAL PRIMARY KEY,
       email TEXT NOT NULL,

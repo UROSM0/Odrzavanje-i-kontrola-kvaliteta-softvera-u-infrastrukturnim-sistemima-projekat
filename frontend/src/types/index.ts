@@ -21,6 +21,22 @@ export interface Project {
   updated_at: string;
 }
 
+export interface ProjectMember {
+  id: number;
+  name: string;
+  email: string;
+  role: 'owner' | 'member';
+  joined_at: string;
+}
+
+export interface ProjectActivity {
+  id: number;
+  actor_name: string;
+  event_type: string;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
 export type Priority = 'low' | 'medium' | 'high';
 export type Status = 'todo' | 'in_progress' | 'done';
 
@@ -33,6 +49,10 @@ export interface Task {
   due_date: string | null;
   project_id: number;
   user_id: number;
+  assigned_to_user_id: number | null;
+  assigned_to_name?: string | null;
+  assigned_to_email?: string | null;
+  created_by_name?: string;
   created_at: string;
   updated_at: string;
 }

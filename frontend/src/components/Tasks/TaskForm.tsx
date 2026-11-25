@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
-import { Task, Priority, Status } from '../../types';
+import { Task, Priority, Status, ProjectMember } from '../../types';
 import { taskAPI } from '../../api/api';
 
 interface Props {
   projectId: number;
   task?: Task;
+  members: ProjectMember[];
   onSubmit: (task: Task) => void;
   onCancel: () => void;
 }
 
-const TaskForm: React.FC<Props> = ({ projectId, task, onSubmit, onCancel }) => {
+const TaskForm: React.FC<Props> = ({ projectId, task, members, onSubmit, onCancel }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<Priority>(task?.priority || 'medium');
   const [status, setStatus] = useState<Status>(task?.status || 'todo');
   const [dueDate, setDueDate] = useState(task?.due_date || '');
+  const [assigneeId, setAssigneeId] = useState(task?.assigned_to_user_id?.toString() || '');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
-      const payload = { title, description, priority, status, due_date: dueDate || null };
+      const payload = { title, description, priority, status, due_date: dueDate || null, assigned_to_user_id: assigneeId ? Number(assigneeId) : null };
       const res = task
         ? await taskAPI.update(task.id, payload)
         : await taskAPI.create(projectId, payload);
@@ -83,6 +85,14 @@ const TaskForm: React.FC<Props> = ({ projectId, task, onSubmit, onCancel }) => {
           <label htmlFor="task-due">Due Date</label>
           <input id="task-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="task-assignee">Assign to</label>
+        <select id="task-assignee" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
+          <option value="">Unassigned</option>
+          {members.map((member) => <option key={member.id} value={member.id}>{member.name}{member.role === 'owner' ? ' (owner)' : ''}</option>)}
+        </select>
       </div>
 
       <div className="form-actions">

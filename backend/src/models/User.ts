@@ -20,7 +20,7 @@ export const UserModel = {
   },
 
   async findByEmail(email: string): Promise<IUser | undefined> {
-    const res = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const res = await db.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]);
     return res.rows[0] as IUser | undefined;
   },
 

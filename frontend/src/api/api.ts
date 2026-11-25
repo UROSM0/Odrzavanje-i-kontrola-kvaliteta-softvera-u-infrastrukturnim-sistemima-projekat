@@ -21,6 +21,10 @@ export const projectAPI = {
   create: (data: { name: string; description: string }) => api.post('/projects', data),
   update: (id: number, data: { name: string; description: string }) => api.put(`/projects/${id}`, data),
   delete: (id: number) => api.delete(`/projects/${id}`),
+  getMembers: (id: number) => api.get(`/projects/${id}/members`),
+  addMember: (id: number, email: string) => api.post(`/projects/${id}/members`, { email }),
+  removeMember: (id: number, memberId: number) => api.delete(`/projects/${id}/members/${memberId}`),
+  getActivity: (id: number) => api.get(`/projects/${id}/activity`),
 };
 
 export const taskAPI = {

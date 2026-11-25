@@ -70,6 +70,8 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange }) =
             {task.due_date && (
               <span className={`task-due ${isOverdue ? 'overdue' : ''}`}>📅 {formatDate(task.due_date)}</span>
             )}
+            {task.assigned_to_name && <span className="task-person">Assigned to <strong>{task.assigned_to_name}</strong></span>}
+            {task.created_by_name && <span className="task-person">Created by {task.created_by_name}</span>}
           </div>
         </div>
       </div>
