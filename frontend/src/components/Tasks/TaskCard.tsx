@@ -7,6 +7,7 @@ interface Props {
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
   onStatusChange: (task: Task) => void;
+  onDiscuss: (task: Task) => void;
 }
 
 const priorityConfig = {
@@ -21,7 +22,7 @@ const statusConfig = {
   done: { label: 'Done', className: 'status-done' },
 } as const;
 
-const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange }) => {
+const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange, onDiscuss }) => {
   const cycleStatus = async () => {
     const next = task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'done' : 'todo';
     try {
@@ -84,6 +85,9 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange }) =
       </div>
 
       <div className="task-card-actions">
+        <button onClick={() => onDiscuss(task)} className="btn-icon" title="Comments and history" aria-label={`Comments and history for ${task.title}`}>
+          💬
+        </button>
         <button onClick={() => onEdit(task)} className="btn-icon" title="Edit">
           ✎
         </button>

@@ -37,6 +37,25 @@ export interface ProjectActivity {
   created_at: string;
 }
 
+export interface TaskComment {
+  id: number;
+  task_id: number;
+  user_id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskHistoryEntry {
+  id: number;
+  actor_name: string;
+  event_type: string;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
 export type Priority = 'low' | 'medium' | 'high';
 export type Status = 'todo' | 'in_progress' | 'done';
 

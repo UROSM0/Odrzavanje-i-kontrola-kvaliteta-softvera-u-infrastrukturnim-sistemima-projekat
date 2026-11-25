@@ -140,7 +140,7 @@ export const taskController = {
         res.status(404).json({ error: 'Task not found.' });
         return;
       }
-      await ProjectModel.logActivity(task!.project_id, req.userId!, 'task_deleted', { task_title: task!.title });
+      await ProjectModel.logActivity(task!.project_id, req.userId!, 'task_deleted', { task_id: task!.id, task_title: task!.title });
       res.json({ message: 'Task deleted successfully.' });
     } catch (err) {
       console.error(err);

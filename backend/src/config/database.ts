@@ -64,6 +64,15 @@ async function ensureSchema(): Promise<void> {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`);
 
+    await client.query(`CREATE TABLE IF NOT EXISTS task_comments (
+      id SERIAL PRIMARY KEY,
+      task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      content TEXT NOT NULL CHECK (length(content) BETWEEN 1 AND 5000),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`);
+
     await client.query(`CREATE TABLE IF NOT EXISTS password_resets (
       id SERIAL PRIMARY KEY,
       email TEXT NOT NULL,

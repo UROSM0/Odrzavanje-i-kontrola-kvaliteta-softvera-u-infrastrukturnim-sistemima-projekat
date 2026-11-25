@@ -19,6 +19,9 @@ const activityDescription = (event: ProjectActivity): string => {
     case 'project_created': return `created project “${String(details.project_name || 'Untitled')}”`;
     case 'task_created': return `created task “${String(details.task_title || 'Untitled')}”`;
     case 'task_deleted': return `deleted task “${String(details.task_title || 'Untitled')}”`;
+    case 'task_comment_added': return 'commented on a task';
+    case 'task_comment_edited': return 'edited a task comment';
+    case 'task_comment_deleted': return 'deleted a task comment';
     case 'task_updated': {
       const changes: string[] = [];
       if (details.status) {

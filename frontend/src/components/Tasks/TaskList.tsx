@@ -8,6 +8,7 @@ import TaskFiltersBar from './TaskFilters';
 import ProjectTeam from '../Projects/ProjectTeam';
 import { useAuth } from '../../context/AuthContext';
 import TaskCalendar from './TaskCalendar';
+import TaskDiscussion from './TaskDiscussion';
 
 const TaskList: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,6 +23,7 @@ const TaskList: React.FC = () => {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [activityVersion, setActivityVersion] = useState(0);
   const [taskView, setTaskView] = useState<'list' | 'calendar'>('list');
+  const [discussionTask, setDiscussionTask] = useState<Task | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const fetchProject = useCallback(async () => {
@@ -159,11 +161,13 @@ const TaskList: React.FC = () => {
                 onEdit={setEditingTask}
                 onDelete={handleTaskDeleted}
                 onStatusChange={handleTaskUpdated}
+                onDiscuss={setDiscussionTask}
               />
             ))
           )}
         </div>
       )}
+      {discussionTask && <TaskDiscussion task={discussionTask} onClose={() => setDiscussionTask(null)} />}
     </div>
   );
 };

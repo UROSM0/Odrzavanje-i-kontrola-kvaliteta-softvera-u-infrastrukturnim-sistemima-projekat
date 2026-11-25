@@ -36,4 +36,9 @@ export const taskAPI = {
     api.post(`/projects/${projectId}/tasks`, data),
   update: (id: number, data: Record<string, unknown>) => api.put(`/tasks/${id}`, data),
   delete: (id: number) => api.delete(`/tasks/${id}`),
+  getComments: (id: number) => api.get(`/tasks/${id}/comments`),
+  addComment: (id: number, content: string) => api.post(`/tasks/${id}/comments`, { content }),
+  updateComment: (id: number, commentId: number, content: string) => api.put(`/tasks/${id}/comments/${commentId}`, { content }),
+  deleteComment: (id: number, commentId: number) => api.delete(`/tasks/${id}/comments/${commentId}`),
+  getHistory: (id: number) => api.get(`/tasks/${id}/history`),
 };
