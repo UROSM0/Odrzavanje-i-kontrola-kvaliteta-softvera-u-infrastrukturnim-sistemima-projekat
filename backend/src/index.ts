@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
 import './config/database';
+import { startDueReminderWorker } from './services/dueReminderWorker';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,4 +49,5 @@ app.get('/health', (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Planify API running on http://localhost:${PORT}`);
+  startDueReminderWorker();
 });

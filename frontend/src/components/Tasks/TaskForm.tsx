@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { Task, Priority, Status, ProjectMember } from '../../types';
 import { taskAPI } from '../../api/api';
 
+const toDateInputValue = (value?: string | null): string => {
+  if (!value) return '';
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface Props {
   projectId: number;
   task?: Task;
@@ -15,7 +24,7 @@ const TaskForm: React.FC<Props> = ({ projectId, task, members, onSubmit, onCance
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<Priority>(task?.priority || 'medium');
   const [status, setStatus] = useState<Status>(task?.status || 'todo');
-  const [dueDate, setDueDate] = useState(task?.due_date || '');
+  const [dueDate, setDueDate] = useState(toDateInputValue(task?.due_date));
   const [assigneeId, setAssigneeId] = useState(task?.assigned_to_user_id?.toString() || '');
   const [error, setError] = useState('');
 
@@ -94,6 +103,7 @@ const TaskForm: React.FC<Props> = ({ projectId, task, members, onSubmit, onCance
           {members.map((member) => <option key={member.id} value={member.id}>{member.name}{member.role === 'owner' ? ' (owner)' : ''}</option>)}
         </select>
       </div>
+      <p className="task-reminder-note">An email reminder is sent one day before the due date to the assignee, or to you if the task is unassigned.</p>
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary">

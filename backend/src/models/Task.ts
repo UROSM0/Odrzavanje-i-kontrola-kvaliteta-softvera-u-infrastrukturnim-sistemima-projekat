@@ -152,7 +152,9 @@ export const TaskModel = {
     const merged = { ...existing, ...updates } as ITask;
     await db.query(`
       UPDATE tasks
-      SET title = $1, description = $2, priority = $3, status = $4, due_date = $5, assigned_to_user_id = $6, updated_at = NOW()
+      SET title = $1, description = $2, priority = $3, status = $4,
+          reminder_sent_for = CASE WHEN due_date IS DISTINCT FROM $5 THEN NULL ELSE reminder_sent_for END,
+          due_date = $5, assigned_to_user_id = $6, updated_at = NOW()
       WHERE id = $7 AND EXISTS (SELECT 1 FROM projects p WHERE p.id = tasks.project_id AND (p.user_id = $8 OR EXISTS (
         SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $8)))
     `, [merged.title, merged.description, merged.priority, merged.status, merged.due_date, merged.assigned_to_user_id || null, id, userId]);

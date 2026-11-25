@@ -1,18 +1,10 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import { UserModel } from '../models/User';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
 import db from '../config/database';
 import bcrypt from 'bcryptjs';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_PASS || '',
-  },
-});
+import { transporter } from '../services/mailer';
 
 async function sendWelcomeEmail(toEmail: string, name: string): Promise<void> {
   try {

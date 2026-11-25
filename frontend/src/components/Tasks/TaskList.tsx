@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Task, Project, ProjectMember, TaskFilters as ITaskFilters } from '../../types';
 import { taskAPI, projectAPI } from '../../api/api';
@@ -7,6 +7,7 @@ import TaskForm from './TaskForm';
 import TaskFiltersBar from './TaskFilters';
 import ProjectTeam from '../Projects/ProjectTeam';
 import { useAuth } from '../../context/AuthContext';
+import TaskCalendar from './TaskCalendar';
 
 const TaskList: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -20,6 +21,8 @@ const TaskList: React.FC = () => {
   const [filters, setFilters] = useState<ITaskFilters>({});
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [activityVersion, setActivityVersion] = useState(0);
+  const [taskView, setTaskView] = useState<'list' | 'calendar'>('list');
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const fetchProject = useCallback(async () => {
     try {
@@ -83,15 +86,21 @@ const TaskList: React.FC = () => {
           <h2>{project.name}</h2>
           {project.description && <p className="page-subtitle">{project.description}</p>}
         </div>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingTask(null);
-          }}
-          className="btn btn-primary"
-        >
-          + Add Task
-        </button>
+        <div className="task-header-actions">
+          <div className="view-toggle-group" aria-label="Task view">
+            <button className={`btn btn-ghost view-toggle ${taskView === 'list' ? 'active' : ''}`} onClick={() => setTaskView('list')}>List</button>
+            <button className={`btn btn-ghost view-toggle ${taskView === 'calendar' ? 'active' : ''}`} onClick={() => setTaskView('calendar')}>Calendar</button>
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingTask(null);
+            }}
+            className="btn btn-primary"
+          >
+            + Add Task
+          </button>
+        </div>
       </div>
 
       <div className="project-progress-bar">
@@ -116,7 +125,7 @@ const TaskList: React.FC = () => {
       />
 
       {(showForm || editingTask) && (
-        <div className="form-card">
+        <div className="form-card" ref={editorRef}>
           <TaskForm
             projectId={Number(projectId)}
             members={members}
@@ -132,21 +141,29 @@ const TaskList: React.FC = () => {
 
       <TaskFiltersBar filters={filters} onChange={setFilters} />
 
-      <div className="task-list">
-        {tasks.length === 0 ? (
-          <p className="empty-state">No tasks yet. Add one to get started!</p>
-        ) : (
-          tasks.map((t) => (
-            <TaskCard
-              key={t.id}
-              task={t}
-              onEdit={setEditingTask}
-              onDelete={handleTaskDeleted}
-              onStatusChange={handleTaskUpdated}
-            />
-          ))
-        )}
-      </div>
+      {taskView === 'calendar' ? (
+        <TaskCalendar tasks={tasks} onSelectTask={(task) => {
+          setShowForm(false);
+          setEditingTask(task);
+          requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }} />
+      ) : (
+        <div className="task-list">
+          {tasks.length === 0 ? (
+            <p className="empty-state">No tasks yet. Add one to get started!</p>
+          ) : (
+            tasks.map((t) => (
+              <TaskCard
+                key={t.id}
+                task={t}
+                onEdit={setEditingTask}
+                onDelete={handleTaskDeleted}
+                onStatusChange={handleTaskUpdated}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

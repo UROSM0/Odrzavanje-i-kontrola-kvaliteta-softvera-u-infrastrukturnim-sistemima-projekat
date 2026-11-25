@@ -41,9 +41,14 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange }) =
   };
 
   const formatDate = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
-
-  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
+    d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+  const dueDay = task.due_date ? new Date(task.due_date) : null;
+  const today = new Date();
+  const dueDayStart = dueDay ? new Date(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate()) : null;
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayDifference = dueDayStart ? Math.round((dueDayStart.getTime() - todayStart.getTime()) / 86400000) : null;
+  const isOverdue = dayDifference !== null && dayDifference < 0 && task.status !== 'done';
+  const reminderLabel = isOverdue ? 'Overdue' : dayDifference === 0 ? 'Due today' : dayDifference === 1 ? 'Due tomorrow' : null;
 
   return (
     <div className={`task-card ${task.status === 'done' ? 'task-done' : ''}`}>
@@ -68,7 +73,9 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange }) =
               {statusConfig[task.status].label}
             </span>
             {task.due_date && (
-              <span className={`task-due ${isOverdue ? 'overdue' : ''}`}>📅 {formatDate(task.due_date)}</span>
+              <span className={`task-due ${isOverdue ? 'overdue' : reminderLabel ? 'due-soon' : ''}`}>
+                📅 {formatDate(task.due_date)}{reminderLabel && task.status !== 'done' ? ` · ${reminderLabel}` : ''}
+              </span>
             )}
             {task.assigned_to_name && <span className="task-person">Assigned to <strong>{task.assigned_to_name}</strong></span>}
             {task.created_by_name && <span className="task-person">Created by {task.created_by_name}</span>}

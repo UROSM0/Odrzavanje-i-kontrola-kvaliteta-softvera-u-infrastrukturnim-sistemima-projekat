@@ -44,6 +44,9 @@ async function ensureSchema(): Promise<void> {
     await client.query(`ALTER TABLE tasks
       ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
 
+    await client.query(`ALTER TABLE tasks
+      ADD COLUMN IF NOT EXISTS reminder_sent_for TIMESTAMP WITH TIME ZONE`);
+
     await client.query(`CREATE TABLE IF NOT EXISTS project_members (
       project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
