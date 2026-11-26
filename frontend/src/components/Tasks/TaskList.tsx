@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import TaskCalendar from './TaskCalendar';
 import TaskDiscussion from './TaskDiscussion';
 import KanbanBoard from './KanbanBoard';
+import TaskImportExport from './TaskImportExport';
 
 const TaskList: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -146,6 +147,13 @@ const TaskList: React.FC = () => {
           <div className="progress-fill" style={{ width: `${project.progress}%` }} />
         </div>
       </div>
+
+      <TaskImportExport
+        projectId={Number(projectId)}
+        tasks={tasks}
+        members={members}
+        onImported={() => { void fetchTasks(); void fetchProject(); }}
+      />
 
       <ProjectTeam
         projectId={Number(projectId)}
