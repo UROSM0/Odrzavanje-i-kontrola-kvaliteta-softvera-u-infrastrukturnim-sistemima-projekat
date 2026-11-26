@@ -29,14 +29,6 @@ export interface ProjectMember {
   joined_at: string;
 }
 
-export interface ProjectActivity {
-  id: number;
-  actor_name: string;
-  event_type: string;
-  details: Record<string, unknown>;
-  created_at: string;
-}
-
 export interface TaskComment {
   id: number;
   task_id: number;
@@ -72,6 +64,9 @@ export interface Task {
   assigned_to_name?: string | null;
   assigned_to_email?: string | null;
   created_by_name?: string;
+  recurrence_rule: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_parent_id: number | null;
+  next_occurrence?: Task | null;
   created_at: string;
   updated_at: string;
 }

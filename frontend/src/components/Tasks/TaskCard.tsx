@@ -22,6 +22,8 @@ const statusConfig = {
   done: { label: 'Done', className: 'status-done' },
 } as const;
 
+const recurrenceLabels = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' } as const;
+
 const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange, onDiscuss }) => {
   const cycleStatus = async () => {
     const next = task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'done' : 'todo';
@@ -73,6 +75,7 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange, onD
             <span className={`badge ${statusConfig[task.status].className}`}>
               {statusConfig[task.status].label}
             </span>
+            {task.recurrence_rule && <span className="badge recurrence-badge">↻ {recurrenceLabels[task.recurrence_rule]}</span>}
             {task.due_date && (
               <span className={`task-due ${isOverdue ? 'overdue' : reminderLabel ? 'due-soon' : ''}`}>
                 📅 {formatDate(task.due_date)}{reminderLabel && task.status !== 'done' ? ` · ${reminderLabel}` : ''}
@@ -85,7 +88,7 @@ const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete, onStatusChange, onD
       </div>
 
       <div className="task-card-actions">
-        <button onClick={() => onDiscuss(task)} className="btn-icon" title="Comments and history" aria-label={`Comments and history for ${task.title}`}>
+        <button onClick={() => onDiscuss(task)} className="btn-icon" title="Comments and recent activity" aria-label={`Comments and recent activity for ${task.title}`}>
           💬
         </button>
         <button onClick={() => onEdit(task)} className="btn-icon" title="Edit">

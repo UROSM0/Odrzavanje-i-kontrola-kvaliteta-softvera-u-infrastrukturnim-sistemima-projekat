@@ -26,13 +26,22 @@ const TaskForm: React.FC<Props> = ({ projectId, task, members, onSubmit, onCance
   const [status, setStatus] = useState<Status>(task?.status || 'todo');
   const [dueDate, setDueDate] = useState(toDateInputValue(task?.due_date));
   const [assigneeId, setAssigneeId] = useState(task?.assigned_to_user_id?.toString() || '');
+  const [recurrenceRule, setRecurrenceRule] = useState(task?.recurrence_rule || '');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
-      const payload = { title, description, priority, status, due_date: dueDate || null, assigned_to_user_id: assigneeId ? Number(assigneeId) : null };
+      const payload = {
+        title,
+        description,
+        priority,
+        status,
+        due_date: dueDate || null,
+        assigned_to_user_id: assigneeId ? Number(assigneeId) : null,
+        recurrence_rule: recurrenceRule || null,
+      };
       const res = task
         ? await taskAPI.update(task.id, payload)
         : await taskAPI.create(projectId, payload);
@@ -103,7 +112,17 @@ const TaskForm: React.FC<Props> = ({ projectId, task, members, onSubmit, onCance
           {members.map((member) => <option key={member.id} value={member.id}>{member.name}{member.role === 'owner' ? ' (owner)' : ''}</option>)}
         </select>
       </div>
+      <div className="form-group">
+        <label htmlFor="task-recurrence">Repeat</label>
+        <select id="task-recurrence" value={recurrenceRule} onChange={(e) => setRecurrenceRule(e.target.value as typeof recurrenceRule)}>
+          <option value="">Does not repeat</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
       <p className="task-reminder-note">An email reminder is sent one day before the due date to the assignee, or to you if the task is unassigned.</p>
+      {recurrenceRule && <p className="task-reminder-note">The next task will be created when this task is marked complete.</p>}
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary">

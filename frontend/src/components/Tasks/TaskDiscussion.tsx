@@ -18,6 +18,10 @@ const historyDescription = (entry: TaskHistoryEntry): string => {
   const details = entry.details || {};
   switch (entry.event_type) {
     case 'task_created': return 'created the task';
+    case 'task_repeated': {
+      const due = entry.details?.next_due_date;
+      return `completed the recurring task and created its next occurrence${due ? ` due ${displayDate(due)}` : ''}`;
+    }
     case 'task_deleted': return 'deleted the task';
     case 'task_comment_added': return 'added a comment';
     case 'task_comment_edited': return 'edited a comment';
@@ -44,6 +48,10 @@ const historyDescription = (entry: TaskHistoryEntry): string => {
         changes.push(`renamed the task from “${title.from}” to “${title.to}”`);
       }
       if (details.description_changed) changes.push('updated the description');
+      if (details.recurrence_rule) {
+        const recurrence = details.recurrence_rule as { from: string | null; to: string | null };
+        changes.push(`changed repeat setting from ${recurrence.from || 'off'} to ${recurrence.to || 'off'}`);
+      }
       return changes.length ? changes.join('; ') : 'updated the task';
     }
     default: return 'updated the task';
@@ -131,7 +139,7 @@ const TaskDiscussion: React.FC<Props> = ({ task, onClose }) => {
 
         <div className="discussion-tabs" role="tablist">
           <button role="tab" aria-selected={tab === 'comments'} className={tab === 'comments' ? 'active' : ''} onClick={() => setTab('comments')}>Comments ({comments.length})</button>
-          <button role="tab" aria-selected={tab === 'history'} className={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>Change history ({history.length})</button>
+          <button role="tab" aria-selected={tab === 'history'} className={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>Recent activity ({history.length})</button>
         </div>
 
         {error && <div className="error-message discussion-error">{error}</div>}

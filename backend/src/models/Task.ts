@@ -10,11 +10,31 @@ export interface ITask {
   project_id: number;
   user_id: number;
   assigned_to_user_id: number | null;
+  recurrence_rule: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_parent_id: number | null;
   assigned_to_name?: string | null;
   assigned_to_email?: string | null;
   created_by_name?: string;
   created_at: string;
   updated_at: string;
+}
+
+function nextDueDate(dueDate: string | null, rule: ITask['recurrence_rule']): Date | null {
+  if (!dueDate || !rule) return null;
+  const next = new Date(dueDate);
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (next.getTime() < todayStart.getTime()) next.setTime(todayStart.getTime());
+  if (rule === 'daily') next.setDate(next.getDate() + 1);
+  if (rule === 'weekly') next.setDate(next.getDate() + 7);
+  if (rule === 'monthly') {
+    const day = next.getDate();
+    next.setDate(1);
+    next.setMonth(next.getMonth() + 1);
+    const lastDayOfMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+    next.setDate(Math.min(day, lastDayOfMonth));
+  }
+  return next;
 }
 
 export interface TaskFilters {
@@ -137,9 +157,11 @@ export const TaskModel = {
 
   async create(task: Omit<ITask, 'id' | 'created_at' | 'updated_at'>): Promise<ITask> {
     const res = await db.query(
-      `INSERT INTO tasks (title, description, priority, status, due_date, project_id, user_id, assigned_to_user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-      [task.title, task.description, task.priority, task.status, task.due_date, task.project_id, task.user_id, task.assigned_to_user_id || null],
+      `INSERT INTO tasks (title, description, priority, status, due_date, project_id, user_id,
+                          assigned_to_user_id, recurrence_rule, recurrence_parent_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      [task.title, task.description, task.priority, task.status, task.due_date, task.project_id, task.user_id,
+        task.assigned_to_user_id || null, task.recurrence_rule || null, task.recurrence_parent_id || null],
     );
     const id = res.rows[0].id as number;
     return TaskModel.findById(id, task.user_id) as Promise<ITask>;
@@ -154,12 +176,32 @@ export const TaskModel = {
       UPDATE tasks
       SET title = $1, description = $2, priority = $3, status = $4,
           reminder_sent_for = CASE WHEN due_date IS DISTINCT FROM $5 THEN NULL ELSE reminder_sent_for END,
-          due_date = $5, assigned_to_user_id = $6, updated_at = NOW()
-      WHERE id = $7 AND EXISTS (SELECT 1 FROM projects p WHERE p.id = tasks.project_id AND (p.user_id = $8 OR EXISTS (
-        SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $8)))
-    `, [merged.title, merged.description, merged.priority, merged.status, merged.due_date, merged.assigned_to_user_id || null, id, userId]);
+          due_date = $5, assigned_to_user_id = $6, recurrence_rule = $7, updated_at = NOW()
+      WHERE id = $8 AND EXISTS (SELECT 1 FROM projects p WHERE p.id = tasks.project_id AND (p.user_id = $9 OR EXISTS (
+        SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $9)))
+    `, [merged.title, merged.description, merged.priority, merged.status, merged.due_date,
+      merged.assigned_to_user_id || null, merged.recurrence_rule || null, id, userId]);
 
     return TaskModel.findById(id, userId);
+  },
+
+  async createNextOccurrence(source: ITask, actorId: number): Promise<ITask | undefined> {
+    if (!source.recurrence_rule) return undefined;
+    const dueDate = nextDueDate(source.due_date, source.recurrence_rule);
+    try {
+      const res = await db.query(`
+        INSERT INTO tasks (title, description, priority, status, due_date, project_id, user_id,
+                           assigned_to_user_id, recurrence_rule, recurrence_parent_id)
+        VALUES ($1, $2, $3, 'todo', $4, $5, $6, $7, $8, $9)
+        RETURNING id
+      `, [source.title, source.description, source.priority, dueDate, source.project_id, source.user_id,
+        source.assigned_to_user_id, source.recurrence_rule, source.id]);
+      return TaskModel.findById(res.rows[0].id, actorId);
+    } catch (err) {
+      if ((err as { code?: string }).code !== '23505') throw err;
+      const existing = await db.query('SELECT id FROM tasks WHERE recurrence_parent_id = $1', [source.id]);
+      return existing.rows[0] ? TaskModel.findById(existing.rows[0].id, actorId) : undefined;
+    }
   },
 
   async delete(id: number, userId: number): Promise<boolean> {

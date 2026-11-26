@@ -916,36 +916,27 @@ a:hover {
   cursor: not-allowed;
 }
 
-.collaboration-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+.project-team-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  margin: 1.25rem 0;
-}
-.collaboration-card {
-  min-width: 0;
-  padding: 1.1rem 1.25rem;
+  min-height: 3.5rem;
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.45rem 0.75rem 0.45rem 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.collaboration-heading {
+.project-team-summary {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.8rem;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
 }
-.collaboration-heading h3 {
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-.collaboration-heading p,
-.invite-form small,
-.empty-activity {
-  color: var(--text-secondary);
-  font-size: 0.78rem;
+.project-team-summary > strong {
+  font-size: 0.82rem;
 }
 .team-count,
 .member-role {
@@ -956,8 +947,33 @@ a:hover {
   font-size: 0.72rem;
   white-space: nowrap;
 }
-.team-member-list,
-.activity-list {
+.team-avatars {
+  display: flex;
+  align-items: center;
+  padding-left: 0.15rem;
+}
+.team-avatars .member-avatar {
+  margin-left: -0.25rem;
+  border: 2px solid var(--surface);
+}
+.team-overflow {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-left: -0.25rem;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  font-size: 0.65rem;
+}
+.add-member-trigger {
+  flex-shrink: 0;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+}
+.team-member-list {
   list-style: none;
 }
 .team-member {
@@ -995,6 +1011,41 @@ a:hover {
   font-size: 0.72rem;
   text-overflow: ellipsis;
 }
+.team-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+}
+.team-dialog {
+  width: min(100%, 480px);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+.team-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+.team-dialog-header h2 {
+  font-size: 1rem;
+}
+.team-dialog-header p,
+.invite-form small {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
 .invite-form {
   margin-top: 0.8rem;
   padding-top: 0.85rem;
@@ -1020,32 +1071,6 @@ a:hover {
 }
 .team-error {
   margin-bottom: 0.6rem;
-}
-.activity-card {
-  max-height: 25rem;
-  overflow-y: auto;
-}
-.activity-list li {
-  display: flex;
-  gap: 0.65rem;
-  padding: 0.65rem 0;
-  border-top: 1px solid var(--border);
-}
-.activity-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  flex: 0 0 0.5rem;
-  margin-top: 0.38rem;
-  border-radius: 50%;
-  background: var(--primary);
-}
-.activity-list p {
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-.activity-list time {
-  color: var(--text-secondary);
-  font-size: 0.7rem;
 }
 .task-person {
   color: var(--text-secondary);
@@ -1193,6 +1218,18 @@ a:hover {
   margin-top: -0.25rem;
   color: var(--text-secondary);
   font-size: 0.75rem;
+}
+.recurrence-badge {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+.recurrence-feedback {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--success);
+  background: var(--success-light);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
 }
 
 .discussion-backdrop {
@@ -1400,11 +1437,6 @@ a:hover {
   margin-top: 0.15rem;
 }
 
-@media (max-width: 850px) {
-  .collaboration-grid {
-    grid-template-columns: 1fr;
-  }
-}
 @media (max-width: 640px) {
   .task-header-actions {
     align-items: stretch;
@@ -1450,5 +1482,16 @@ a:hover {
   .discussion-scroll {
     padding-right: 1rem;
     padding-left: 1rem;
+  }
+  .project-team-bar {
+    padding-left: 0.65rem;
+  }
+  .team-dialog-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .team-dialog {
+    max-height: 90vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 }

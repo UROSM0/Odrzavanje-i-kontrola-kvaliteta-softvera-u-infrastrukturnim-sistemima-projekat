@@ -21,9 +21,9 @@ const TaskList: React.FC = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filters, setFilters] = useState<ITaskFilters>({});
   const [members, setMembers] = useState<ProjectMember[]>([]);
-  const [activityVersion, setActivityVersion] = useState(0);
   const [taskView, setTaskView] = useState<'list' | 'calendar'>('list');
   const [discussionTask, setDiscussionTask] = useState<Task | null>(null);
+  const [recurrenceMessage, setRecurrenceMessage] = useState('');
   const editorRef = useRef<HTMLDivElement>(null);
 
   const fetchProject = useCallback(async () => {
@@ -60,23 +60,33 @@ const TaskList: React.FC = () => {
   }, [fetchTasks]);
 
   const handleTaskCreated = (task: Task) => {
-    setTasks((prev) => [task, ...prev]);
+    setTasks((prev) => [task, ...(task.next_occurrence ? [task.next_occurrence] : []), ...prev]);
     setShowForm(false);
     fetchProject();
-    setActivityVersion((version) => version + 1);
+    fetchTasks();
+    if (task.next_occurrence) setRecurrenceMessage('The next recurring task has been created.');
   };
 
   const handleTaskUpdated = (updated: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    setTasks((prev) => [
+      ...(updated.next_occurrence ? [updated.next_occurrence] : []),
+      ...prev.map((t) => (t.id === updated.id ? updated : t)),
+    ]);
     setEditingTask(null);
     fetchProject();
-    setActivityVersion((version) => version + 1);
+    fetchTasks();
+    if (updated.next_occurrence) {
+      const dueDate = updated.next_occurrence.due_date
+        ? ` Due ${new Date(updated.next_occurrence.due_date).toLocaleDateString()}.`
+        : '';
+      setRecurrenceMessage(`The next recurring task has been created.${dueDate}`);
+      window.setTimeout(() => setRecurrenceMessage(''), 6000);
+    }
   };
 
   const handleTaskDeleted = (id: number) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     fetchProject();
-    setActivityVersion((version) => version + 1);
   };
 
   if (!project) return null;
@@ -123,12 +133,12 @@ const TaskList: React.FC = () => {
         currentUserId={user?.id || 0}
         members={members}
         onMembersChange={setMembers}
-        activityVersion={activityVersion}
       />
 
       {(showForm || editingTask) && (
         <div className="form-card" ref={editorRef}>
           <TaskForm
+            key={editingTask ? `edit-${editingTask.id}` : 'new-task'}
             projectId={Number(projectId)}
             members={members}
             task={editingTask || undefined}
@@ -142,6 +152,7 @@ const TaskList: React.FC = () => {
       )}
 
       <TaskFiltersBar filters={filters} onChange={setFilters} />
+      {recurrenceMessage && <div className="recurrence-feedback" role="status">{recurrenceMessage}</div>}
 
       {taskView === 'calendar' ? (
         <TaskCalendar tasks={tasks} onSelectTask={(task) => {
