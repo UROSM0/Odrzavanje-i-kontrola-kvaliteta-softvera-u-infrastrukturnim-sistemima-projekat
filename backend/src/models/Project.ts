@@ -33,10 +33,10 @@ export interface IProjectActivity {
 
 const withProgress = (row: any): IProjectWithProgress => ({
   ...row,
-  total_tasks: row.total_tasks || 0,
-  completed_tasks: row.completed_tasks || 0,
-  progress: row.total_tasks > 0
-    ? Math.round(((row.completed_tasks || 0) / row.total_tasks) * 100)
+  total_tasks: Number(row.total_tasks) || 0,
+  completed_tasks: Number(row.completed_tasks) || 0,
+  progress: Number(row.total_tasks) > 0
+    ? Math.round(((Number(row.completed_tasks) || 0) / Number(row.total_tasks)) * 100)
     : 0,
 });
 

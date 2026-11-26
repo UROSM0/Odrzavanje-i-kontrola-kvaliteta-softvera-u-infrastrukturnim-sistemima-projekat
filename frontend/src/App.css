@@ -236,6 +236,58 @@ a:hover {
 .sidebar-icon {
   font-size: 1rem;
 }
+.reports-page { display: flex; flex-direction: column; gap: 1.25rem; }
+.reports-heading { display: flex; align-items: center; justify-content: space-between; }
+.reports-heading h2 { margin-bottom: 0.2rem; }
+.reports-heading p, .report-panel-heading p { color: var(--text-secondary); font-size: 0.875rem; }
+.reports-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.report-summary-card { display: flex; align-items: center; gap: 0.9rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.2rem; box-shadow: var(--shadow); }
+.report-summary-card > div { display: flex; flex-direction: column; }
+.report-summary-card strong { font-size: 1.5rem; line-height: 1.2; }
+.report-summary-card span:last-child { color: var(--text-secondary); font-size: 0.8rem; }
+.report-summary-icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; color: var(--success); background: var(--success-light); font-weight: 700; font-size: 1.2rem; }
+.report-icon-open { color: var(--primary); background: var(--primary-light); }
+.report-icon-project { color: var(--warning); background: var(--warning-light); }
+.report-panel { min-width: 0; padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.report-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
+.report-panel-heading h3 { margin-bottom: 0.15rem; font-size: 1rem; }
+.report-period { flex-shrink: 0; color: var(--text-secondary); background: var(--bg); border-radius: 20px; padding: 0.25rem 0.65rem; font-size: 0.75rem; }
+.completion-chart { display: grid; grid-template-columns: repeat(14, minmax(20px, 1fr)); align-items: end; gap: 0.45rem; height: 190px; border-bottom: 1px solid var(--border); padding: 0 0.2rem; }
+.completion-day { display: grid; grid-template-rows: 1.1rem 1fr 1.4rem; align-items: end; min-width: 0; height: 100%; text-align: center; }
+.completion-count { color: var(--text-secondary); font-size: 0.7rem; }
+.completion-bar-track { display: flex; align-items: end; justify-content: center; width: 100%; height: 100%; }
+.completion-bar { width: min(70%, 28px); min-height: 0; background: var(--primary); border-radius: 5px 5px 0 0; transition: height 0.2s ease; }
+.completion-day:hover .completion-bar { background: var(--primary-hover); }
+.completion-label { color: var(--text-secondary); font-size: 0.67rem; white-space: nowrap; }
+.report-note { margin-top: 0.8rem; color: var(--text-light); font-size: 0.75rem; }
+.reports-two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
+.workload-list, .project-progress-list { display: flex; flex-direction: column; gap: 1.15rem; }
+.workload-row { display: flex; flex-direction: column; gap: 0.45rem; }
+.workload-label, .project-progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; font-size: 0.85rem; }
+.workload-label span, .project-progress-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workload-label strong, .project-progress-label span { color: var(--text-secondary); font-size: 0.78rem; }
+.workload-track { display: flex; width: 100%; height: 0.55rem; overflow: hidden; border-radius: 10px; background: var(--bg); }
+.workload-todo { background: var(--primary); }
+.workload-progress { background: var(--warning); }
+.workload-legend { display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.72rem; }
+.workload-legend span { display: flex; align-items: center; gap: 0.35rem; }
+.workload-legend i { width: 0.5rem; height: 0.5rem; border-radius: 2px; }
+.legend-todo { background: var(--primary); }
+.legend-progress { background: var(--warning); }
+.project-progress-item { display: flex; flex-direction: column; gap: 0.45rem; }
+.project-progress-item .progress-bar { height: 0.55rem; }
+.report-empty, .reports-error { padding: 1rem 0; color: var(--text-secondary); font-size: 0.875rem; }
+.reports-error { color: var(--danger); }
+@media (max-width: 900px) {
+  .reports-two-column { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .reports-summary { grid-template-columns: 1fr; gap: 0.65rem; }
+  .report-panel { padding: 1rem; }
+  .completion-chart { gap: 0.2rem; }
+  .completion-label { font-size: 0.58rem; transform: rotate(-35deg); transform-origin: center top; }
+  .workload-legend { flex-wrap: wrap; gap: 0.4rem 0.8rem; }
+}
 .sidebar-section {
   padding: 0 0.75rem;
 }

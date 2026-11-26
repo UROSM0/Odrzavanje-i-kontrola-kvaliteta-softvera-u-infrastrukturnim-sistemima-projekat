@@ -9,6 +9,7 @@ import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import ProjectList from './components/Projects/ProjectList';
 import TaskList from './components/Tasks/TaskList';
+import Reports from './components/Reports/Reports';
 
 const App: React.FC = () => {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/projects" element={<ProjectList />} />
             <Route path="/projects/:projectId" element={<TaskList />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

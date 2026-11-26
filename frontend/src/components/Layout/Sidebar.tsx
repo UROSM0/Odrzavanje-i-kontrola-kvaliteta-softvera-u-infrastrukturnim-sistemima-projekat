@@ -41,6 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeMenu }) => {
         <NavLink to="/projects" end onClick={handleNavClick} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
           <span className="sidebar-icon">📁</span> All Projects
         </NavLink>
+        <NavLink to="/reports" onClick={handleNavClick} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <span className="sidebar-icon">📈</span> Reports
+        </NavLink>
       </nav>
 
       <div className="sidebar-section">

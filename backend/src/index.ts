@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
+import reportRoutes from './routes/reports';
 import './config/database';
 import { startDueReminderWorker } from './services/dueReminderWorker';
 
@@ -42,6 +43,7 @@ const authLimiter = rateLimit({
 app.use('/auth', authLimiter, authRoutes);
 app.use('/projects', generalLimiter, projectRoutes);
 app.use('/tasks', generalLimiter, taskRoutes);
+app.use('/reports', generalLimiter, reportRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Planify API is running' });
