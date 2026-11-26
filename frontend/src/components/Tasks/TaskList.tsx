@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Task, Project, ProjectMember, TaskFilters as ITaskFilters } from '../../types';
+import { Task, Project, ProjectMember, Status, TaskFilters as ITaskFilters } from '../../types';
 import { taskAPI, projectAPI } from '../../api/api';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
@@ -9,6 +9,7 @@ import ProjectTeam from '../Projects/ProjectTeam';
 import { useAuth } from '../../context/AuthContext';
 import TaskCalendar from './TaskCalendar';
 import TaskDiscussion from './TaskDiscussion';
+import KanbanBoard from './KanbanBoard';
 
 const TaskList: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -21,7 +22,7 @@ const TaskList: React.FC = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filters, setFilters] = useState<ITaskFilters>({});
   const [members, setMembers] = useState<ProjectMember[]>([]);
-  const [taskView, setTaskView] = useState<'list' | 'calendar'>('list');
+  const [taskView, setTaskView] = useState<'list' | 'calendar' | 'kanban'>('list');
   const [discussionTask, setDiscussionTask] = useState<Task | null>(null);
   const [recurrenceMessage, setRecurrenceMessage] = useState('');
   const editorRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,17 @@ const TaskList: React.FC = () => {
     }
   };
 
+  const handleKanbanMove = async (task: Task, status: Status) => {
+    setTasks((prev) => prev.map((item) => item.id === task.id ? { ...item, status } : item));
+    try {
+      const response = await taskAPI.update(task.id, { status });
+      handleTaskUpdated(response.data);
+    } catch (error) {
+      setTasks((prev) => prev.map((item) => item.id === task.id ? task : item));
+      throw error;
+    }
+  };
+
   const handleTaskDeleted = (id: number) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     fetchProject();
@@ -109,6 +121,7 @@ const TaskList: React.FC = () => {
           <div className="view-toggle-group" aria-label="Task view">
             <button className={`btn btn-ghost view-toggle ${taskView === 'list' ? 'active' : ''}`} onClick={() => setTaskView('list')}>List</button>
             <button className={`btn btn-ghost view-toggle ${taskView === 'calendar' ? 'active' : ''}`} onClick={() => setTaskView('calendar')}>Calendar</button>
+            <button className={`btn btn-ghost view-toggle ${taskView === 'kanban' ? 'active' : ''}`} onClick={() => setTaskView('kanban')}>Kanban</button>
           </div>
           <button
             onClick={() => {
@@ -167,6 +180,15 @@ const TaskList: React.FC = () => {
           setEditingTask(task);
           requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
         }} />
+      ) : taskView === 'kanban' ? (
+        <KanbanBoard
+          tasks={tasks}
+          onMoveTask={handleKanbanMove}
+          onEdit={(task) => { setShowForm(false); setEditingTask(task); requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}
+          onDelete={handleTaskDeleted}
+          onStatusChange={handleTaskUpdated}
+          onDiscuss={setDiscussionTask}
+        />
       ) : (
         <div className="task-list">
           {tasks.length === 0 ? (
