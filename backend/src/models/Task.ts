@@ -40,107 +40,86 @@ function nextDueDate(dueDate: string | null, rule: ITask['recurrence_rule']): Da
 export interface TaskFilters {
   priority?: string;
   status?: string;
+  search?: string;
+  assignee_id?: string;
+  due_state?: string;
+  due_from?: string;
+  due_to?: string;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }
 
-function applyFilters(base: string, params: any[], filters: TaskFilters): string {
-  let query = base;
+function isDateOnly(value?: string): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
+function buildTaskQuery(base: string, initialValues: any[], filters: TaskFilters): { query: string; values: any[] } {
+  let query = base;
+  const values = [...initialValues];
+  const push = (value: unknown): string => {
+    values.push(value);
+    return `$${values.length}`;
+  };
   if (filters.priority) {
-    query += ' AND priority = ?';
-    params.push(filters.priority);
+    query += ` AND t.priority = ${push(filters.priority)}`;
   }
   if (filters.status) {
-    query += ' AND status = ?';
-    params.push(filters.status);
+    query += ` AND t.status = ${push(filters.status)}`;
   }
+  const search = typeof filters.search === 'string' ? filters.search.trim().slice(0, 120) : '';
+  if (search) {
+    const placeholder = push(`%${search}%`);
+    query += ` AND (t.title ILIKE ${placeholder} OR t.description ILIKE ${placeholder})`;
+  }
+  if (filters.assignee_id === 'unassigned') {
+    query += ' AND t.assigned_to_user_id IS NULL';
+  } else if (typeof filters.assignee_id === 'string' && /^[1-9]\d*$/.test(filters.assignee_id)) {
+    query += ` AND t.assigned_to_user_id = ${push(Number(filters.assignee_id))}`;
+  }
+  if (filters.due_state === 'overdue') {
+    query += " AND t.due_date < CURRENT_DATE::timestamptz AND t.status <> 'done'";
+  } else if (filters.due_state === 'today') {
+    query += ' AND t.due_date::date = CURRENT_DATE';
+  } else if (filters.due_state === 'next7') {
+    query += ' AND t.due_date::date >= CURRENT_DATE AND t.due_date::date < CURRENT_DATE + 7';
+  } else if (filters.due_state === 'no_date') {
+    query += ' AND t.due_date IS NULL';
+  }
+  if (isDateOnly(filters.due_from)) query += ` AND t.due_date::date >= ${push(filters.due_from)}::date`;
+  if (isDateOnly(filters.due_to)) query += ` AND t.due_date::date <= ${push(filters.due_to)}::date`;
 
   const allowed = ['priority', 'status', 'due_date', 'created_at', 'title'];
   const col = allowed.includes(filters.sort_by || '') ? filters.sort_by! : 'created_at';
   const dir = filters.sort_order === 'asc' ? 'ASC' : 'DESC';
-
   if (col === 'priority') {
-    query += ` ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END ${dir}`;
+    query += ` ORDER BY CASE t.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END ${dir}`;
   } else {
-    query += ` ORDER BY ${col} ${dir}`;
+    query += ` ORDER BY t.${col} ${dir}`;
   }
-
-  return query;
+  return { query, values };
 }
 
 export const TaskModel = {
   async findByProject(projectId: number, userId: number, filters: TaskFilters = {}): Promise<ITask[]> {
-    const params: any[] = [projectId];
     const base = `SELECT t.*, assignee.name AS assigned_to_name, assignee.email AS assigned_to_email,
       creator.name AS created_by_name FROM tasks t
       LEFT JOIN users assignee ON assignee.id = t.assigned_to_user_id
       LEFT JOIN users creator ON creator.id = t.user_id WHERE t.project_id = $1`;
-    const { query, values } = (() => {
-      // reuse applyFilters logic but adapt placeholders
-      let q = base;
-      const vals = [...params];
-
-      if (filters.priority) {
-        q += ` AND t.priority = $${vals.length + 1}`;
-        vals.push(filters.priority);
-      }
-      if (filters.status) {
-        q += ` AND t.status = $${vals.length + 1}`;
-        vals.push(filters.status);
-      }
-
-      const allowed = ['priority', 'status', 'due_date', 'created_at', 'title'];
-      const col = allowed.includes(filters.sort_by || '') ? filters.sort_by! : 'created_at';
-      const dir = filters.sort_order === 'asc' ? 'ASC' : 'DESC';
-
-      if (col === 'priority') {
-        q += ` ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END ${dir}`;
-      } else {
-        q += ` ORDER BY t.${col} ${dir}`;
-      }
-
-      return { query: q, values: vals };
-    })();
-
+    const { query, values } = buildTaskQuery(base, [projectId], filters);
     const res = await db.query(query, values);
     return res.rows as ITask[];
   },
 
   async findAllByUser(userId: number, filters: TaskFilters = {}): Promise<ITask[]> {
-    const params: any[] = [userId];
     const base = `SELECT t.*, assignee.name AS assigned_to_name, assignee.email AS assigned_to_email,
       creator.name AS created_by_name FROM tasks t
       LEFT JOIN users assignee ON assignee.id = t.assigned_to_user_id
       LEFT JOIN users creator ON creator.id = t.user_id
       WHERE EXISTS (SELECT 1 FROM projects p WHERE p.id = t.project_id AND (p.user_id = $1 OR EXISTS (
         SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $1)))`;
-    const { query, values } = (() => {
-      let q = base;
-      const vals = [...params];
-
-      if (filters.priority) {
-        q += ` AND t.priority = $${vals.length + 1}`;
-        vals.push(filters.priority);
-      }
-      if (filters.status) {
-        q += ` AND t.status = $${vals.length + 1}`;
-        vals.push(filters.status);
-      }
-
-      const allowed = ['priority', 'status', 'due_date', 'created_at', 'title'];
-      const col = allowed.includes(filters.sort_by || '') ? filters.sort_by! : 'created_at';
-      const dir = filters.sort_order === 'asc' ? 'ASC' : 'DESC';
-
-      if (col === 'priority') {
-        q += ` ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END ${dir}`;
-      } else {
-        q += ` ORDER BY t.${col} ${dir}`;
-      }
-
-      return { query: q, values: vals };
-    })();
-
+    const { query, values } = buildTaskQuery(base, [userId], filters);
     const res = await db.query(query, values);
     return res.rows as ITask[];
   },

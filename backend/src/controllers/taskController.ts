@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { TaskModel } from '../models/Task';
+import { TaskFilters, TaskModel } from '../models/Task';
 import { ProjectModel } from '../models/Project';
 
 const recurrenceRules = ['daily', 'weekly', 'monthly'];
@@ -21,15 +21,25 @@ async function logNextOccurrence(task: Awaited<ReturnType<typeof TaskModel.creat
   });
 }
 
+function filtersFromRequest(req: AuthRequest): TaskFilters {
+  const queryString = (value: unknown): string | undefined => typeof value === 'string' ? value : undefined;
+  return {
+    priority: queryString(req.query.priority),
+    status: queryString(req.query.status),
+    search: queryString(req.query.search),
+    assignee_id: queryString(req.query.assignee_id),
+    due_state: queryString(req.query.due_state),
+    due_from: queryString(req.query.due_from),
+    due_to: queryString(req.query.due_to),
+    sort_by: queryString(req.query.sort_by),
+    sort_order: queryString(req.query.sort_order) as 'asc' | 'desc' | undefined,
+  };
+}
+
 export const taskController = {
   async getAll(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const filters = {
-        priority: req.query.priority as string,
-        status: req.query.status as string,
-        sort_by: req.query.sort_by as string,
-        sort_order: req.query.sort_order as 'asc' | 'desc',
-      };
+      const filters = filtersFromRequest(req);
       const tasks = await TaskModel.findAllByUser(req.userId!, filters);
       res.json(tasks);
     } catch (err) {
@@ -56,12 +66,7 @@ export const taskController = {
         return;
       }
 
-      const filters = {
-        priority: req.query.priority as string,
-        status: req.query.status as string,
-        sort_by: req.query.sort_by as string,
-        sort_order: req.query.sort_order as 'asc' | 'desc',
-      };
+      const filters = filtersFromRequest(req);
       const tasks = await TaskModel.findByProject(projectId, req.userId!, filters);
       res.json(tasks);
     } catch (err) {

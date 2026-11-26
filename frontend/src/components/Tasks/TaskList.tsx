@@ -40,6 +40,11 @@ const TaskList: React.FC = () => {
       const params: Record<string, string> = {};
       if (filters.priority) params.priority = filters.priority;
       if (filters.status) params.status = filters.status;
+      if (filters.search) params.search = filters.search;
+      if (filters.assignee_id) params.assignee_id = filters.assignee_id;
+      if (filters.due_state) params.due_state = filters.due_state;
+      if (filters.due_from) params.due_from = filters.due_from;
+      if (filters.due_to) params.due_to = filters.due_to;
       if (filters.sort_by) params.sort_by = filters.sort_by;
       if (filters.sort_order) params.sort_order = filters.sort_order;
 
@@ -56,7 +61,9 @@ const TaskList: React.FC = () => {
     projectAPI.getMembers(Number(projectId)).then((res) => setMembers(res.data)).catch(() => setMembers([]));
   }, [projectId]);
   useEffect(() => {
-    fetchTasks();
+    const delay = filters.search ? 250 : 0;
+    const timer = window.setTimeout(() => { void fetchTasks(); }, delay);
+    return () => window.clearTimeout(timer);
   }, [fetchTasks]);
 
   const handleTaskCreated = (task: Task) => {
@@ -151,7 +158,7 @@ const TaskList: React.FC = () => {
         </div>
       )}
 
-      <TaskFiltersBar filters={filters} onChange={setFilters} />
+      <TaskFiltersBar filters={filters} onChange={setFilters} members={members} />
       {recurrenceMessage && <div className="recurrence-feedback" role="status">{recurrenceMessage}</div>}
 
       {taskView === 'calendar' ? (
@@ -163,7 +170,7 @@ const TaskList: React.FC = () => {
       ) : (
         <div className="task-list">
           {tasks.length === 0 ? (
-            <p className="empty-state">No tasks yet. Add one to get started!</p>
+            <p className="empty-state">{filters.search || filters.priority || filters.status || filters.assignee_id || filters.due_state || filters.due_from || filters.due_to ? 'No tasks match these filters.' : 'No tasks yet. Add one to get started!'}</p>
           ) : (
             tasks.map((t) => (
               <TaskCard

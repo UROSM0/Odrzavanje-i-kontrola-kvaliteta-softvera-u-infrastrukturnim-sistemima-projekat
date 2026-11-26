@@ -81,6 +81,11 @@ export interface TaskStats {
 export interface TaskFilters {
   priority?: Priority | '';
   status?: Status | '';
+  search?: string;
+  assignee_id?: string;
+  due_state?: 'overdue' | 'today' | 'next7' | 'no_date' | '';
+  due_from?: string;
+  due_to?: string;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }
